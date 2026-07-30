@@ -1,5 +1,6 @@
 import { Languages, UserCircle } from "lucide-react";
 
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 export function AppHeader() {
@@ -11,6 +12,7 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <Button size="icon" type="button" variant="ghost">
           <Languages className="size-4" />
           <span className="sr-only">Change language</span>
