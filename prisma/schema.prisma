@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,132 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+model User {
+  id           String       @id @default(cuid())
+  username     String       @unique
+  email        String       @unique
+  passwordHash String
+  displayName  String
+  status       RecordStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  memberships Membership[]
+
+  @@map("users")
+}
+
+model Organization {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  nameEn      String
+  nameNe      String?
+  shortNameEn String?
+  shortNameNe String?
+  status      RecordStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  organizationalUnitTypes OrganizationalUnitType[]
+  organizationalUnits     OrganizationalUnit[]
+  memberships             Membership[]
+
+  @@map("organizations")
+}
+
+model OrganizationalUnitType {
+  id             String       @id @default(cuid())
+  organizationId String
+  code           String
+  nameEn         String
+  nameNe         String?
+  shortNameEn    String?
+  shortNameNe    String?
+  sortOrder      Int          @default(0)
+  status         RecordStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  units        OrganizationalUnit[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@map("organizational_unit_types")
+}
+
+model OrganizationalUnit {
+  id             String       @id @default(cuid())
+  organizationId String
+  parentId       String?
+  unitTypeId     String?
+  code           String
+  nameEn         String
+  nameNe         String?
+  shortNameEn    String?
+  shortNameNe    String?
+  sortOrder      Int          @default(0)
+  status         RecordStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       OrganizationalUnit?            @relation("OrganizationalUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children     OrganizationalUnit[]           @relation("OrganizationalUnitHierarchy")
+  unitType     OrganizationalUnitType?        @relation(fields: [unitTypeId], references: [id], onDelete: SetNull)
+  memberships  MembershipOrganizationalUnit[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([parentId])
+  @@index([unitTypeId])
+  @@map("organizational_units")
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  status         MembershipStatus @default(PENDING)
+  joinedAt       DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user                      User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization              Organization                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationalUnitMembers MembershipOrganizationalUnit[]
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("memberships")
+}
+
+model MembershipOrganizationalUnit {
+  membershipId         String
+  organizationalUnitId String
+  isPrimary            Boolean  @default(false)
+  createdAt            DateTime @default(now())
+
+  membership         Membership         @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  organizationalUnit OrganizationalUnit @relation(fields: [organizationalUnitId], references: [id], onDelete: Cascade)
+
+  @@id([membershipId, organizationalUnitId])
+  @@index([organizationalUnitId])
+  @@map("membership_organizational_units")
 }
