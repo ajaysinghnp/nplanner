@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+const optionalText = (min: number, max: number, fieldName: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${fieldName} must not exceed ${max} characters.`)
+    .refine(
+      (value) => value === "" || value.length >= min,
+      `${fieldName} must be at least ${min} characters.`
+    );
+
 export const createOrganizationSchema = z.object({
   code: z
     .string()
@@ -17,26 +27,11 @@ export const createOrganizationSchema = z.object({
     .min(2, "English organization name must be at least 2 characters.")
     .max(200, "English organization name must not exceed 200 characters."),
 
-  nameNe: z
-    .string()
-    .trim()
-    .min(2, "Nepali organization name must be at least 2 characters.")
-    .max(200, "Nepali organization name must not exceed 200 characters.")
-    .optional(),
+  nameNe: optionalText(2, 200, "Nepali organization name"),
 
-  shortNameEn: z
-    .string()
-    .trim()
-    .min(2, "English short name must be at least 2 characters.")
-    .max(50, "English short name must not exceed 50 characters.")
-    .optional(),
+  shortNameEn: optionalText(2, 50, "English short name"),
 
-  shortNameNe: z
-    .string()
-    .trim()
-    .min(2, "Nepali short name must be at least 2 characters.")
-    .max(50, "Nepali short name must not exceed 50 characters.")
-    .optional(),
+  shortNameNe: optionalText(2, 50, "Nepali short name"),
 });
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;

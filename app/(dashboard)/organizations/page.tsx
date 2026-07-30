@@ -1,6 +1,6 @@
-import { Building2, Plus } from "lucide-react";
+import { Building2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { getOrganizations } from "@/lib/organizations/organization.service";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +19,7 @@ export default async function OrganizationsPage() {
           </p>
         </div>
 
-        <Button disabled>
-          <Plus />
-          Add organization
-        </Button>
+        <CreateOrganizationDialog />
       </div>
 
       {organizations.length === 0 ? (
