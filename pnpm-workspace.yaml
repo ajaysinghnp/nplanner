@@ -1,4 +1,7 @@
 allowBuilds:
+  "@prisma/engines": false
+  better-sqlite3: true
+  prisma: false
   sharp: true
   unrs-resolver: true
 ignoredBuiltDependencies:
