@@ -6,14 +6,14 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const connectionString = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
-if (!connectionString) {
+if (!databaseUrl) {
   throw new Error("DATABASE_URL is not defined.");
 }
 
 const adapter = new PrismaBetterSqlite3({
-  url: connectionString,
+  url: databaseUrl,
 });
 
 export const prisma =
