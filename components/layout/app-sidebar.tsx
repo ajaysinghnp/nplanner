@@ -1,38 +1,10 @@
 "use client";
 
-import { Building2, CalendarDays, CheckSquare, ClipboardCheck, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { navigationItems } from "@/conf/navigation";
 import { cn } from "@/lib/utils";
-
-const navigationItems = [
-  {
-    href: "/calendar",
-    icon: CalendarDays,
-    label: "Calendar",
-  },
-  {
-    href: "/events",
-    icon: CheckSquare,
-    label: "Events",
-  },
-  {
-    href: "/approvals",
-    icon: ClipboardCheck,
-    label: "Approvals",
-  },
-  {
-    href: "/organizations",
-    icon: Building2,
-    label: "Organizations",
-  },
-  {
-    href: "/settings",
-    icon: Settings,
-    label: "Settings",
-  },
-];
 
 export function AppSidebar() {
   const pathname = usePathname();
