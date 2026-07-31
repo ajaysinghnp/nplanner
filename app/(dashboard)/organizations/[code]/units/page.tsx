@@ -2,12 +2,15 @@ import { Building2, Layers3 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CreateOrganizationalUnitDialog } from "@/components/organizations/units/create-organizational-unit-dialog";
 import { CreateOrganizationalUnitTypeDialog } from "@/components/organizations/units/create-organizational-unit-type-dialog";
+import { DeleteOrganizationalUnitDialog } from "@/components/organizations/units/delete-organizational-unit-dialog";
 import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/units/delete-organizational-unit-type-dialog";
+import { EditOrganizationalUnitDialog } from "@/components/organizations/units/edit-organizational-unit-dialog";
 import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/units/edit-organizational-unit-type-dialog";
-import { Button } from "@/components/ui/button";
 import { getOrganizationByCode } from "@/lib/organizations/organization.service";
 import { getOrganizationalUnitTypes } from "@/lib/organizations/units/organizational-unit-type.service";
+import { getOrganizationalUnits } from "@/lib/organizations/units/organizational-unit.service";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +30,7 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
   }
 
   const unitTypes = await getOrganizationalUnitTypes(organization.id);
+  const organizationalUnits = await getOrganizationalUnits(organization.id);
 
   return (
     <div className="flex flex-col gap-6">
@@ -163,16 +167,96 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
         )}
       </section>
 
-      <section className="border-border bg-muted/30 rounded-xl border border-dashed p-6">
-        <h2 className="font-semibold">Organizational units</h2>
+      <section className="border-border bg-card overflow-hidden rounded-xl border">
+        <div className="flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+              <Building2 className="size-5" />
+            </div>
 
-        <p className="text-muted-foreground mt-1 text-sm">
-          Organizational unit management will be added after unit-type management is complete.
-        </p>
+            <div>
+              <h2 className="font-semibold">Organizational units</h2>
 
-        <Button variant="outline" className="mt-4" disabled>
-          Manage organizational units
-        </Button>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Create and manage the organizational structure for {organization.nameEn}.
+              </p>
+            </div>
+          </div>
+
+          <CreateOrganizationalUnitDialog
+            organizationId={organization.id}
+            organizationCode={organization.code}
+            unitTypes={unitTypes}
+            parentUnits={organizationalUnits}
+          />
+        </div>
+
+        {organizationalUnits.length === 0 ? (
+          <div className="flex min-h-64 flex-col items-center justify-center p-8 text-center">
+            <Building2 className="text-muted-foreground mb-4 size-10" />
+
+            <h3 className="text-lg font-semibold">No organizational units found</h3>
+
+            <p className="text-muted-foreground mt-2 max-w-md text-sm">
+              Create an organizational unit to begin building the organizational structure for{" "}
+              {organization.nameEn}.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {organizationalUnits.map((unit) => (
+              <article
+                key={unit.id}
+                className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+                    <Building2 className="size-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold">{unit.nameEn}</h3>
+
+                      <span className="bg-muted text-muted-foreground rounded-md px-2 py-0.5 font-mono text-xs">
+                        {unit.code}
+                      </span>
+                    </div>
+
+                    {unit.nameNe ? (
+                      <p className="text-muted-foreground mt-1 text-sm">{unit.nameNe}</p>
+                    ) : null}
+
+                    <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                      <span>Type: {unit.unitType?.nameEn ?? "Not specified"}</span>
+
+                      <span>Parent: {unit.parent?.nameEn ?? "Root unit"}</span>
+
+                      <span>Sort order: {unit.sortOrder}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs">
+                    {unit.status}
+                  </span>
+
+                  <EditOrganizationalUnitDialog
+                    organizationCode={organization.code}
+                    unit={unit}
+                    unitTypes={unitTypes}
+                    parentUnits={organizationalUnits}
+                  />
+                  <DeleteOrganizationalUnitDialog
+                    organizationCode={organization.code}
+                    unit={unit}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
