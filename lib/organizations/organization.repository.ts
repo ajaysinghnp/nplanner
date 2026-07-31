@@ -1,4 +1,7 @@
-import type { CreateOrganizationInput } from "@/lib/organizations/organization.schemas";
+import type {
+  CreateOrganizationInput,
+  UpdateOrganizationInput,
+} from "@/lib/organizations/organization.schemas";
 
 import { prisma } from "@/lib/db/prisma";
 
@@ -29,5 +32,21 @@ export function findOrganizationByCode(code: string) {
 export function createOrganizationRecord(data: CreateOrganizationInput) {
   return prisma.organization.create({
     data,
+  });
+}
+
+export function updateOrganizationRecord(data: UpdateOrganizationInput) {
+  const { id, ...organizationData } = data;
+
+  return prisma.organization.update({
+    where: {
+      id,
+    },
+    data: {
+      ...organizationData,
+      nameNe: organizationData.nameNe ?? null,
+      shortNameEn: organizationData.shortNameEn ?? null,
+      shortNameNe: organizationData.shortNameNe ?? null,
+    },
   });
 }

@@ -1,11 +1,15 @@
 import {
   createOrganizationRecord,
   findOrganizationByCode,
+  findOrganizationById,
   findOrganizations,
+  updateOrganizationRecord,
 } from "@/lib/organizations/organization.repository";
 import {
   createOrganizationSchema,
   type CreateOrganizationInput,
+  type UpdateOrganizationInput,
+  updateOrganizationSchema,
 } from "@/lib/organizations/organization.schemas";
 
 export async function getOrganizations() {
@@ -38,4 +42,16 @@ export async function ensureOrganization(input: CreateOrganizationInput) {
   }
 
   return createOrganizationRecord(data);
+}
+
+export async function updateOrganization(input: UpdateOrganizationInput) {
+  const data = updateOrganizationSchema.parse(input);
+
+  const existingOrganization = await findOrganizationById(data.id);
+
+  if (!existingOrganization) {
+    throw new Error("Organization not found.");
+  }
+
+  return updateOrganizationRecord(data);
 }

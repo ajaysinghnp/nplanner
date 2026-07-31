@@ -1,4 +1,5 @@
 import { Building2 } from "lucide-react";
+import Link from "next/link";
 
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { getOrganizations } from "@/lib/organizations/organization.service";
@@ -36,9 +37,10 @@ export default async function OrganizationsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {organizations.map((organization) => (
-            <article
+            <Link
               key={organization.id}
-              className="border-border bg-card rounded-xl border p-5 shadow-sm"
+              href={`/organizations/${organization.code}`}
+              className="border-border bg-card hover:border-primary/40 hover:bg-accent/30 rounded-xl border p-5 shadow-sm transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
@@ -69,7 +71,7 @@ export default async function OrganizationsPage() {
 
                 <span>{organization.status}</span>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       )}
