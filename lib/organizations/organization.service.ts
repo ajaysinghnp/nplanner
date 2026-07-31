@@ -1,8 +1,10 @@
 import {
   createOrganizationRecord,
+  deleteOrganizationRecord,
   findOrganizationByCode,
   findOrganizationById,
   findOrganizations,
+  getOrganizationDependencyCounts,
   updateOrganizationRecord,
 } from "@/lib/organizations/organization.repository";
 import {
@@ -14,6 +16,10 @@ import {
 
 export async function getOrganizations() {
   return findOrganizations();
+}
+
+export async function getOrganizationById(id: string) {
+  return findOrganizationById(id);
 }
 
 export async function getOrganizationByCode(code: string) {
@@ -54,4 +60,58 @@ export async function updateOrganization(input: UpdateOrganizationInput) {
   }
 
   return updateOrganizationRecord(data);
+}
+
+export async function deleteOrganization(id: string, confirmationCode: string) {
+  const organization = await findOrganizationById(id);
+
+  if (!organization) {
+    throw new Error("Organization not found.");
+  }
+
+  if (confirmationCode !== organization.code) {
+    throw new Error(
+      "The entered organization code does not match. The organization was not deleted."
+    );
+  }
+
+  const dependencyResult = await getOrganizationDependencyCounts(id);
+
+  if (!dependencyResult) {
+    throw new Error("Organization not found.");
+  }
+
+  const { organizationalUnitTypes, organizationalUnits, memberships } = dependencyResult._count;
+
+  const totalDependencies = organizationalUnitTypes + organizationalUnits + memberships;
+
+  if (totalDependencies > 0) {
+    const dependencies: string[] = [];
+
+    if (organizationalUnitTypes > 0) {
+      dependencies.push(
+        `${organizationalUnitTypes} organizational unit type${
+          organizationalUnitTypes === 1 ? "" : "s"
+        }`
+      );
+    }
+
+    if (organizationalUnits > 0) {
+      dependencies.push(
+        `${organizationalUnits} organizational unit${organizationalUnits === 1 ? "" : "s"}`
+      );
+    }
+
+    if (memberships > 0) {
+      dependencies.push(`${memberships} membership${memberships === 1 ? "" : "s"}`);
+    }
+
+    throw new Error(
+      `This organization cannot be deleted because it has related records: ${dependencies.join(
+        ", "
+      )}.`
+    );
+  }
+
+  return deleteOrganizationRecord(id);
 }

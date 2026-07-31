@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation";
 
+import { DeleteOrganizationDialog } from "@/components/organizations/delete-organization-dialog";
 import { EditOrganizationDialog } from "@/components/organizations/edit-organization-dialog";
 import { getOrganizationByCode } from "@/lib/organizations/organization.service";
 
@@ -41,7 +42,10 @@ export default async function OrganizationDetailsPage({ params }: OrganizationDe
           </p>
         </div>
 
-        <EditOrganizationDialog organization={organization} />
+        <div className="mr-8 flex flex-wrap items-center gap-4">
+          <EditOrganizationDialog organization={organization} />
+          <DeleteOrganizationDialog organization={organization} />
+        </div>
       </div>
 
       <section className="border-border bg-card rounded-xl border p-6">

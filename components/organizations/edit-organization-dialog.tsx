@@ -5,8 +5,8 @@ import { useActionState, useEffect, useState } from "react";
 
 import type { Organization } from "@/generated/prisma/client";
 
-import { initialUpdateOrganizationActionState } from "@/app/(dashboard)/organizations/[code]/action-state";
-import { updateOrganizationAction } from "@/app/(dashboard)/organizations/[code]/actions";
+import { initialUpdateOrganizationActionState } from "@/app/(dashboard)/organizations/action-state";
+import { updateOrganizationAction } from "@/app/(dashboard)/organizations/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -51,7 +51,7 @@ export function EditOrganizationDialog({ organization }: EditOrganizationDialogP
         <Button type="button" variant="outline" size="sm">
           <Pencil className="size-4" />
 
-          <span className="p-4">Edit</span>
+          <span>Edit</span>
         </Button>
       </DialogTrigger>
 

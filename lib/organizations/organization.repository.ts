@@ -50,3 +50,28 @@ export function updateOrganizationRecord(data: UpdateOrganizationInput) {
     },
   });
 }
+
+export function getOrganizationDependencyCounts(id: string) {
+  return prisma.organization.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      _count: {
+        select: {
+          organizationalUnitTypes: true,
+          organizationalUnits: true,
+          memberships: true,
+        },
+      },
+    },
+  });
+}
+
+export function deleteOrganizationRecord(id: string) {
+  return prisma.organization.delete({
+    where: {
+      id,
+    },
+  });
+}

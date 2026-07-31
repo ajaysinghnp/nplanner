@@ -1,7 +1,9 @@
-import { Building2 } from "lucide-react";
+import { Building2, Circle } from "lucide-react";
 import Link from "next/link";
 
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
+import { DeleteOrganizationDialog } from "@/components/organizations/delete-organization-dialog";
+import { EditOrganizationDialog } from "@/components/organizations/edit-organization-dialog";
 import { getOrganizations } from "@/lib/organizations/organization.service";
 
 export const dynamic = "force-dynamic";
@@ -36,43 +38,71 @@ export default async function OrganizationsPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {organizations.map((organization) => (
-            <Link
-              key={organization.id}
-              href={`/organizations/${organization.code}`}
-              className="border-border bg-card hover:border-primary/40 hover:bg-accent/30 rounded-xl border p-5 shadow-sm transition-colors"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                    <Building2 className="size-5" />
+          {organizations.map((organization) => {
+            const isActive = organization.status === "ACTIVE";
+
+            const shortName =
+              organization.shortNameEn ?? organization.shortNameNe ?? "No short name";
+
+            return (
+              <article
+                key={organization.id}
+                className="border-border bg-card hover:border-primary/40 rounded-xl border shadow-sm transition-colors"
+              >
+                <Link
+                  href={`/organizations/${organization.code}`}
+                  className="hover:bg-accent/30 focus-visible:ring-ring block rounded-xl p-5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+                        <Building2 className="size-5" />
+                      </div>
+
+                      <div className="min-w-0">
+                        <h2 className="truncate font-semibold">{organization.nameEn}</h2>
+
+                        {organization.nameNe ? (
+                          <p className="text-muted-foreground truncate text-sm">
+                            {organization.nameNe}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <span className="bg-muted text-muted-foreground shrink-0 rounded-md px-2 py-1 font-mono text-xs">
+                      {organization.code}
+                    </span>
                   </div>
 
-                  <div className="min-w-0">
-                    <h2 className="truncate font-semibold">{organization.nameEn}</h2>
+                  <div className="mt-5 flex min-w-0 items-center gap-4 border-t pt-4">
+                    <p className="text-muted-foreground min-w-0 flex-1 truncate text-sm">
+                      {shortName}
+                    </p>
 
-                    {organization.nameNe ? (
-                      <p className="text-muted-foreground truncate text-sm">
-                        {organization.nameNe}
-                      </p>
-                    ) : null}
+                    <div className="text-muted-foreground flex shrink-0 items-center gap-1.5">
+                      <Circle
+                        className={
+                          isActive
+                            ? "size-2.5 fill-green-500 text-green-500"
+                            : "size-2.5 fill-red-500 text-red-500"
+                        }
+                        aria-hidden="true"
+                      />
+
+                      <span className="text-xs">{organization.status}</span>
+                    </div>
                   </div>
+                </Link>
+
+                <div className="border-border flex items-center justify-end gap-2 border-t px-5 py-3">
+                  <EditOrganizationDialog organization={organization} />
+
+                  <DeleteOrganizationDialog organization={organization} />
                 </div>
-
-                <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs">
-                  {organization.code}
-                </span>
-              </div>
-
-              <div className="text-muted-foreground mt-5 flex items-center justify-between border-t pt-4 text-sm">
-                <span>
-                  {organization.shortNameEn ?? organization.shortNameNe ?? "No short name"}
-                </span>
-
-                <span>{organization.status}</span>
-              </div>
-            </Link>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
