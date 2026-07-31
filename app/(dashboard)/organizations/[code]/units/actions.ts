@@ -61,7 +61,7 @@ export async function createOrganizationalUnitTypeAction(
     });
 
     revalidatePath(`/organizations/${organizationCode}`);
-    revalidatePath(`/organizations/${organizationCode}/unit-types`);
+    revalidatePath(`/organizations/${organizationCode}/units`);
 
     return {
       success: true,
@@ -114,7 +114,7 @@ export async function updateOrganizationalUnitTypeAction(
     });
 
     revalidatePath(`/organizations/${organizationCode}`);
-    revalidatePath(`/organizations/${organizationCode}/unit-types`);
+    revalidatePath(`/organizations/${organizationCode}/units`);
 
     return {
       success: true,
@@ -167,7 +167,7 @@ export async function deleteOrganizationalUnitTypeAction(
     await deleteOrganizationalUnitType(id, confirmationCode);
 
     revalidatePath(`/organizations/${organizationCode}`);
-    revalidatePath(`/organizations/${organizationCode}/unit-types`);
+    revalidatePath(`/organizations/${organizationCode}/units`);
 
     return {
       success: true,
