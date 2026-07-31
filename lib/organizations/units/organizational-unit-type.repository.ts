@@ -1,0 +1,77 @@
+import type {
+  CreateOrganizationalUnitTypeData,
+  UpdateOrganizationalUnitTypeData,
+} from "@/lib/organizations/units/organizational-unit-type.schemas";
+
+import { prisma } from "@/lib/db/prisma";
+
+export function findOrganizationalUnitTypesByOrganizationId(organizationId: string) {
+  return prisma.organizationalUnitType.findMany({
+    where: {
+      organizationId,
+    },
+    orderBy: [
+      {
+        sortOrder: "asc",
+      },
+      {
+        nameEn: "asc",
+      },
+    ],
+  });
+}
+
+export function findOrganizationalUnitTypeById(id: string) {
+  return prisma.organizationalUnitType.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+export function findOrganizationalUnitTypeByOrganizationIdAndCode(
+  organizationId: string,
+  code: string
+) {
+  return prisma.organizationalUnitType.findUnique({
+    where: {
+      organizationId_code: {
+        organizationId,
+        code,
+      },
+    },
+  });
+}
+
+export function createOrganizationalUnitTypeRecord(data: CreateOrganizationalUnitTypeData) {
+  return prisma.organizationalUnitType.create({
+    data,
+  });
+}
+
+export function updateOrganizationalUnitTypeRecord(data: UpdateOrganizationalUnitTypeData) {
+  const { id, ...updateData } = data;
+
+  return prisma.organizationalUnitType.update({
+    where: {
+      id,
+    },
+    data: updateData,
+  });
+}
+
+export function countOrganizationalUnitsByUnitTypeId(unitTypeId: string) {
+  return prisma.organizationalUnit.count({
+    where: {
+      unitTypeId,
+    },
+  });
+}
+
+export function deleteOrganizationalUnitTypeRecord(id: string) {
+  return prisma.organizationalUnitType.delete({
+    where: {
+      id,
+    },
+  });
+}
