@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CreateOrganizationalUnitTypeDialog } from "@/components/organizations/units/create-organizational-unit-type-dialog";
+import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/units/delete-organizational-unit-type-dialog";
 import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/units/edit-organizational-unit-type-dialog";
 import { Button } from "@/components/ui/button";
 import { getOrganizationByCode } from "@/lib/organizations/organization.service";
@@ -148,6 +149,10 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
                     {unitType.status}
                   </span>
                   <EditOrganizationalUnitTypeDialog
+                    organizationCode={organization.code}
+                    unitType={unitType}
+                  />
+                  <DeleteOrganizationalUnitTypeDialog
                     organizationCode={organization.code}
                     unitType={unitType}
                   />

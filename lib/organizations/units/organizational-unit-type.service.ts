@@ -52,25 +52,34 @@ export async function updateOrganizationalUnitType(input: UpdateOrganizationalUn
 }
 
 export async function deleteOrganizationalUnitType(id: string, confirmationCode: string) {
-  const unitType = await findOrganizationalUnitTypeById(id);
+  const unitTypeId = id.trim();
+  const normalizedConfirmationCode = confirmationCode.trim();
 
-  if (!unitType) {
+  if (!unitTypeId) {
+    throw new Error("Organizational unit type ID is required.");
+  }
+
+  if (!normalizedConfirmationCode) {
+    throw new Error("Unit type code confirmation is required.");
+  }
+
+  const existingUnitType = await findOrganizationalUnitTypeById(unitTypeId);
+
+  if (!existingUnitType) {
     throw new Error("Organizational unit type was not found.");
   }
 
-  if (confirmationCode.trim() !== unitType.code) {
-    throw new Error("The organizational unit type code does not match.");
+  if (existingUnitType.code !== normalizedConfirmationCode) {
+    throw new Error("The entered unit type code does not match.");
   }
 
-  const assignedUnitCount = await countOrganizationalUnitsByUnitTypeId(unitType.id);
+  const assignedUnitCount = await countOrganizationalUnitsByUnitTypeId(existingUnitType.id);
 
   if (assignedUnitCount > 0) {
     throw new Error(
-      `This organizational unit type is currently assigned to ${assignedUnitCount} organizational unit${
-        assignedUnitCount === 1 ? "" : "s"
-      } and cannot be deleted.`
+      "This organizational unit type cannot be deleted because it is assigned to existing organizational units. Archive it instead."
     );
   }
 
-  return deleteOrganizationalUnitTypeRecord(unitType.id);
+  return deleteOrganizationalUnitTypeRecord(existingUnitType.id);
 }
