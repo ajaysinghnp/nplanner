@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation";
 
+import { EditOrganizationDialog } from "@/components/organizations/edit-organization-dialog";
 import { getOrganizationByCode } from "@/lib/organizations/organization.service";
 
 type OrganizationDetailsPageProps = {
@@ -21,20 +22,26 @@ export default async function OrganizationDetailsPage({ params }: OrganizationDe
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-muted-foreground text-sm">Organizations</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{organization.nameEn}</h1>
 
-        <div className="mt-1 flex items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{organization.nameEn}</h1>
+            <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs">
+              {organization.code}
+            </span>
+          </div>
 
-          <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs">
-            {organization.code}
-          </span>
+          {organization.nameNe ? (
+            <p className="text-muted-foreground mt-1">{organization.nameNe}</p>
+          ) : null}
+
+          <p className="text-muted-foreground mt-2">
+            Manage organization information and organizational structure.
+          </p>
         </div>
 
-        {organization.nameNe ? (
-          <p className="text-muted-foreground mt-1">{organization.nameNe}</p>
-        ) : null}
+        <EditOrganizationDialog organization={organization} />
       </div>
 
       <section className="border-border bg-card rounded-xl border p-6">

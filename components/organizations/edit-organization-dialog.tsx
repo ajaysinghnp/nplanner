@@ -51,7 +51,7 @@ export function EditOrganizationDialog({ organization }: EditOrganizationDialogP
         <Button type="button" variant="outline" size="sm">
           <Pencil className="size-4" />
 
-          <span>Edit</span>
+          <span className="p-4">Edit</span>
         </Button>
       </DialogTrigger>
 
