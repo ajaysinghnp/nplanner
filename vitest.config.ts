@@ -12,5 +12,6 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
+    reporters: ["verbose"],
   },
 });
