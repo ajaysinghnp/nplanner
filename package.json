@@ -2,6 +2,7 @@
   "name": "nplanner",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +15,7 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:staged": "vitest run --passWithNoTests --reporter=dot",
+    "test:staged": "vitest run --passWithNoTests",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:format": "prisma format",

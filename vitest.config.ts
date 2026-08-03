@@ -1,3 +1,5 @@
+// vitest.config.ts
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -10,8 +12,10 @@ export default defineConfig({
       "@": rootDirectory,
     },
   },
+
   test: {
     include: ["tests/**/*.{test,spec}.{js,jsx,ts,tsx}"],
-    reporters: ["verbose"],
+
+    reporters: ["./tests/reporters/grouped-reporter.ts"],
   },
 });
