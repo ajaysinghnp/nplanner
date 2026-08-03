@@ -75,6 +75,7 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
           <CreateOrganizationalUnitTypeDialog
             organizationId={organization.id}
             organizationCode={organization.code}
+            unitTypes={unitTypes}
           />
         </div>
       </div>
@@ -174,6 +175,7 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
                     <EditOrganizationalUnitTypeDialog
                       organizationCode={organization.code}
                       unitType={unitType}
+                      unitTypes={unitTypes}
                     />
 
                     <DeleteOrganizationalUnitTypeDialog

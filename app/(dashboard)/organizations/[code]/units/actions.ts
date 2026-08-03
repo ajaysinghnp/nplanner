@@ -59,6 +59,7 @@ export async function createOrganizationalUnitTypeAction(
   try {
     await createOrganizationalUnitType({
       organizationId,
+      parentTypeId: getStringValue(formData, "parentTypeId"),
       code: getStringValue(formData, "code"),
       nameEn: getStringValue(formData, "nameEn"),
       nameNe: getStringValue(formData, "nameNe"),
@@ -82,6 +83,7 @@ export async function createOrganizationalUnitTypeAction(
       return {
         success: false,
         fieldErrors: {
+          parentTypeId: fieldErrors.parentTypeId,
           code: fieldErrors.code,
           nameEn: fieldErrors.nameEn,
           nameNe: fieldErrors.nameNe,
@@ -113,6 +115,7 @@ export async function updateOrganizationalUnitTypeAction(
   try {
     await updateOrganizationalUnitType({
       id: getStringValue(formData, "id"),
+      parentTypeId: getStringValue(formData, "parentTypeId"),
       nameEn: getStringValue(formData, "nameEn"),
       nameNe: getStringValue(formData, "nameNe"),
       shortNameEn: getStringValue(formData, "shortNameEn"),
@@ -135,6 +138,7 @@ export async function updateOrganizationalUnitTypeAction(
       return {
         success: false,
         fieldErrors: {
+          parentTypeId: fieldErrors.parentTypeId,
           nameEn: fieldErrors.nameEn,
           nameNe: fieldErrors.nameNe,
           shortNameEn: fieldErrors.shortNameEn,

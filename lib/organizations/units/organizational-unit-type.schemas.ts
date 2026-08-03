@@ -29,6 +29,12 @@ const recordStatusSchema = z.enum([
 export const createOrganizationalUnitTypeSchema = z.object({
   organizationId: z.string().trim().min(1, "Organization ID is required."),
 
+  parentTypeId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+
   code: z
     .string()
     .trim()
@@ -60,6 +66,12 @@ export const createOrganizationalUnitTypeSchema = z.object({
 export const updateOrganizationalUnitTypeSchema = z.object({
   id: z.string().trim().min(1, "Organizational unit type ID is required."),
 
+  parentTypeId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+
   nameEn: requiredText(2, 200, "English unit type name"),
 
   nameNe: optionalText(2, 200, "Nepali unit type name"),
@@ -77,21 +89,8 @@ export const updateOrganizationalUnitTypeSchema = z.object({
   status: recordStatusSchema,
 });
 
-export type CreateOrganizationalUnitTypeInput = {
-  organizationId: string;
-  code: string;
-  nameEn: string;
-  nameNe?: string;
-  shortNameEn?: string;
-  shortNameNe?: string;
-  sortOrder?: string | number;
-  status?: string;
-};
-
-export type CreateOrganizationalUnitTypeData = z.output<typeof createOrganizationalUnitTypeSchema>;
-
-export type UpdateOrganizationalUnitTypeInput = {
-  id: string;
+export type OrganizationalUnitTypeCommonInput = {
+  parentTypeId?: string;
   nameEn: string;
   nameNe?: string;
   shortNameEn?: string;
@@ -99,5 +98,16 @@ export type UpdateOrganizationalUnitTypeInput = {
   sortOrder: string | number;
   status: string;
 };
+
+export type CreateOrganizationalUnitTypeInput = OrganizationalUnitTypeCommonInput & {
+  organizationId: string;
+  code: string;
+};
+
+export type UpdateOrganizationalUnitTypeInput = OrganizationalUnitTypeCommonInput & {
+  id: string;
+};
+
+export type CreateOrganizationalUnitTypeData = z.output<typeof createOrganizationalUnitTypeSchema>;
 
 export type UpdateOrganizationalUnitTypeData = z.output<typeof updateOrganizationalUnitTypeSchema>;

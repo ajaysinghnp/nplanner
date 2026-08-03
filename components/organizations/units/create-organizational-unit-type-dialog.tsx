@@ -16,15 +16,32 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type OrganizationalUnitTypeOption = {
+  id: string;
+  code: string;
+  nameEn: string;
+  nameNe: string | null;
+  sortOrder: number;
+};
 
 type CreateOrganizationalUnitTypeDialogProps = {
   organizationId: string;
   organizationCode: string;
+  unitTypes: OrganizationalUnitTypeOption[];
 };
 
 export function CreateOrganizationalUnitTypeDialog({
   organizationId,
   organizationCode,
+  unitTypes,
 }: CreateOrganizationalUnitTypeDialogProps) {
   const [open, setOpen] = useState(false);
 
@@ -50,6 +67,7 @@ export function CreateOrganizationalUnitTypeDialog({
         <CreateOrganizationalUnitTypeDialogForm
           organizationId={organizationId}
           organizationCode={organizationCode}
+          unitTypes={unitTypes}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>
@@ -60,18 +78,22 @@ export function CreateOrganizationalUnitTypeDialog({
 type CreateOrganizationalUnitTypeDialogFormProps = {
   organizationId: string;
   organizationCode: string;
+  unitTypes: OrganizationalUnitTypeOption[];
   onSuccess: () => void;
 };
 
 function CreateOrganizationalUnitTypeDialogForm({
   organizationId,
   organizationCode,
+  unitTypes,
   onSuccess,
 }: CreateOrganizationalUnitTypeDialogFormProps) {
   const [state, formAction, isPending] = useActionState(
     createOrganizationalUnitTypeAction,
     initialCreateOrganizationalUnitTypeActionState
   );
+
+  const [parentTypeId, setParentTypeId] = useState("");
 
   const handleSuccess = useEffectEvent(() => {
     onSuccess();
@@ -88,6 +110,8 @@ function CreateOrganizationalUnitTypeDialogForm({
       <input type="hidden" name="organizationId" value={organizationId} />
 
       <input type="hidden" name="organizationCode" value={organizationCode} />
+
+      <input type="hidden" name="parentTypeId" value={parentTypeId} />
 
       {state.message && !state.success ? (
         <div
@@ -153,6 +177,44 @@ function CreateOrganizationalUnitTypeDialogForm({
             <p className="text-muted-foreground text-xs">Lower numbers appear first.</p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="unit-type-parent">
+          Parent unit type <span className="text-muted-foreground">(optional)</span>
+        </Label>
+
+        <Select value={parentTypeId} onValueChange={setParentTypeId}>
+          <SelectTrigger
+            id="unit-type-parent"
+            aria-invalid={Boolean(state.fieldErrors?.parentTypeId)}
+            aria-describedby={
+              state.fieldErrors?.parentTypeId ? "unit-type-parent-error" : undefined
+            }
+          >
+            <SelectValue placeholder="No parent unit type" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="">No parent unit type</SelectItem>
+
+            {unitTypes.map((unitType) => (
+              <SelectItem key={unitType.id} value={unitType.id}>
+                {unitType.nameEn} ({unitType.code})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {state.fieldErrors?.parentTypeId?.[0] ? (
+          <p id="unit-type-parent-error" className="text-destructive text-sm">
+            {state.fieldErrors.parentTypeId[0]}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-xs">
+            Select the type that this unit type belongs under, if applicable.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -269,7 +331,7 @@ function CreateOrganizationalUnitTypeDialogForm({
       </div>
 
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" disabled={isPending} onClick={() => onSuccess()}>
+        <Button type="button" variant="outline" disabled={isPending} onClick={onSuccess}>
           Cancel
         </Button>
 

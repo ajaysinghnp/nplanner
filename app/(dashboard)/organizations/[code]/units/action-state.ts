@@ -1,5 +1,6 @@
 export type CreateOrganizationalUnitTypeActionState = {
   fieldErrors?: {
+    parentTypeId?: string[];
     code?: string[];
     nameEn?: string[];
     nameNe?: string[];
@@ -19,6 +20,7 @@ export const initialCreateOrganizationalUnitTypeActionState: CreateOrganizationa
 
 export type UpdateOrganizationalUnitTypeActionState = {
   fieldErrors?: {
+    parentTypeId?: string[];
     nameEn?: string[];
     nameNe?: string[];
     shortNameEn?: string[];

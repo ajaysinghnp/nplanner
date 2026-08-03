@@ -45,18 +45,24 @@ export function findOrganizationalUnitTypeByOrganizationIdAndCode(
 
 export function createOrganizationalUnitTypeRecord(data: CreateOrganizationalUnitTypeData) {
   return prisma.organizationalUnitType.create({
-    data,
+    data: {
+      ...data,
+      parentTypeId: data.parentTypeId ?? null,
+    },
   });
 }
 
 export function updateOrganizationalUnitTypeRecord(data: UpdateOrganizationalUnitTypeData) {
-  const { id, ...updateData } = data;
+  const { id, parentTypeId, ...updateData } = data;
 
   return prisma.organizationalUnitType.update({
     where: {
       id,
     },
-    data: updateData,
+    data: {
+      ...updateData,
+      parentTypeId: parentTypeId ?? null,
+    },
   });
 }
 
