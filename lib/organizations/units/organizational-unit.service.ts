@@ -36,8 +36,11 @@ export async function createOrganizationalUnit(input: CreateOrganizationalUnitIn
     throw new Error(`An organizational unit with code "${data.code}" already exists.`);
   }
 
-  await validateUnitType(data.organizationId, data.unitTypeId);
-  await validateParentUnit(data.organizationId, data.parentId);
+  const unitType = await validateUnitType(data.organizationId, data.unitTypeId);
+
+  const parentUnit = await validateParentUnit(data.organizationId, data.parentId);
+
+  validateUnitTypeParentRelationship(unitType, parentUnit);
 
   return createOrganizationalUnitRecord(data);
 }
@@ -51,9 +54,15 @@ export async function updateOrganizationalUnit(input: UpdateOrganizationalUnitIn
     throw new Error("Organizational unit was not found.");
   }
 
-  await validateUnitType(existingUnit.organizationId, data.unitTypeId);
+  const unitType = await validateUnitType(existingUnit.organizationId, data.unitTypeId);
 
-  await validateParentUnit(existingUnit.organizationId, data.parentId, existingUnit.id);
+  const parentUnit = await validateParentUnit(
+    existingUnit.organizationId,
+    data.parentId,
+    existingUnit.id
+  );
+
+  validateUnitTypeParentRelationship(unitType, parentUnit);
 
   if (data.parentId) {
     await validateNoHierarchyCycle(existingUnit.id, data.parentId);
@@ -88,7 +97,7 @@ export async function deleteOrganizationalUnit(id: string, confirmationCode: str
 
 async function validateUnitType(organizationId: string, unitTypeId: string) {
   if (unitTypeId === "") {
-    return;
+    return null;
   }
 
   const unitType = await findOrganizationalUnitTypeById(unitTypeId);
@@ -100,6 +109,8 @@ async function validateUnitType(organizationId: string, unitTypeId: string) {
   if (unitType.organizationId !== organizationId) {
     throw new Error("The selected organizational unit type belongs to another organization.");
   }
+
+  return unitType;
 }
 
 async function validateParentUnit(
@@ -108,7 +119,7 @@ async function validateParentUnit(
   currentUnitId?: string
 ) {
   if (parentId === "") {
-    return;
+    return null;
   }
 
   if (parentId === currentUnitId) {
@@ -123,6 +134,39 @@ async function validateParentUnit(
 
   if (parentUnit.organizationId !== organizationId) {
     throw new Error("The selected parent organizational unit belongs to another organization.");
+  }
+
+  return parentUnit;
+}
+
+function validateUnitTypeParentRelationship(
+  unitType: Awaited<ReturnType<typeof findOrganizationalUnitTypeById>> | null,
+  parentUnit: Awaited<ReturnType<typeof findOrganizationalUnitById>> | null
+) {
+  if (!unitType) {
+    return;
+  }
+
+  if (!unitType.parentTypeId) {
+    if (parentUnit) {
+      throw new Error(
+        `"${unitType.nameEn}" is a root unit type and cannot have a parent organizational unit.`
+      );
+    }
+
+    return;
+  }
+
+  if (!parentUnit) {
+    throw new Error(
+      `An organizational unit of type "${unitType.nameEn}" must have a parent organizational unit.`
+    );
+  }
+
+  if (parentUnit.unitTypeId !== unitType.parentTypeId) {
+    throw new Error(
+      `The selected parent organizational unit must have the parent type configured for "${unitType.nameEn}".`
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
 import { initialCreateOrganizationalUnitActionState } from "@/app/(dashboard)/organizations/[code]/units/action-state";
 import { createOrganizationalUnitAction } from "@/app/(dashboard)/organizations/[code]/units/actions";
@@ -26,6 +26,7 @@ import {
 
 type UnitTypeOption = {
   id: string;
+  parentTypeId: string | null;
   code: string;
   nameEn: string;
   nameNe: string | null;
@@ -33,6 +34,7 @@ type UnitTypeOption = {
 
 type ParentUnitOption = {
   id: string;
+  unitTypeId: string | null;
   code: string;
   nameEn: string;
   nameNe: string | null;
@@ -77,7 +79,7 @@ export function CreateOrganizationalUnitDialog({
           <DialogTitle>Add organizational unit</DialogTitle>
 
           <DialogDescription>
-            Create an organizational unit and optionally assign its type and parent unit.
+            Create an organizational unit and assign its type and parent unit.
           </DialogDescription>
         </DialogHeader>
 
@@ -87,6 +89,10 @@ export function CreateOrganizationalUnitDialog({
           organizationCode={organizationCode}
           unitTypes={unitTypes}
           parentUnits={parentUnits}
+          onClose={() => {
+            setOpen(false);
+            setFormKey((currentKey) => currentKey + 1);
+          }}
           onSuccess={() => {
             setOpen(false);
             setFormKey((currentKey) => currentKey + 1);
@@ -102,6 +108,7 @@ type CreateOrganizationalUnitFormProps = {
   organizationCode: string;
   unitTypes: UnitTypeOption[];
   parentUnits: ParentUnitOption[];
+  onClose: () => void;
   onSuccess: () => void;
 };
 
@@ -111,6 +118,7 @@ function CreateOrganizationalUnitForm({
   unitTypes,
   parentUnits,
   onSuccess,
+  onClose,
 }: CreateOrganizationalUnitFormProps) {
   const [state, formAction, isPending] = useActionState(
     createOrganizationalUnitAction,
@@ -120,6 +128,21 @@ function CreateOrganizationalUnitForm({
   const [unitTypeId, setUnitTypeId] = useState("");
   const [parentId, setParentId] = useState("");
   const [status, setStatus] = useState("ACTIVE");
+
+  const selectedUnitType = useMemo(
+    () => unitTypes.find((unitType) => unitType.id === unitTypeId) ?? null,
+    [unitTypeId, unitTypes]
+  );
+
+  const requiredParentTypeId = selectedUnitType?.parentTypeId ?? null;
+
+  const availableParentUnits = useMemo(() => {
+    if (!requiredParentTypeId) {
+      return [];
+    }
+
+    return parentUnits.filter((parentUnit) => parentUnit.unitTypeId === requiredParentTypeId);
+  }, [parentUnits, requiredParentTypeId]);
 
   useEffect(() => {
     if (state.success) {
@@ -150,7 +173,9 @@ function CreateOrganizationalUnitForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="organizational-unit-code">Unit code</Label>
+          <Label htmlFor="organizational-unit-code">
+            Unit code <span className="text-destructive">*</span>
+          </Label>
 
           <Input
             id="organizational-unit-code"
@@ -187,7 +212,9 @@ function CreateOrganizationalUnitForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="organizational-unit-name-en">English name</Label>
+          <Label htmlFor="organizational-unit-name-en">
+            English name <span className="text-destructive">*</span>
+          </Label>
 
           <Input
             id="organizational-unit-name-en"
@@ -265,6 +292,7 @@ function CreateOrganizationalUnitForm({
             value={unitTypeId || "__none__"}
             onValueChange={(value) => {
               setUnitTypeId(value === "__none__" ? "" : value);
+              setParentId("");
             }}
           >
             <SelectTrigger>
@@ -288,24 +316,53 @@ function CreateOrganizationalUnitForm({
 
           <Select
             value={parentId || "__none__"}
+            disabled={!requiredParentTypeId}
             onValueChange={(value) => {
               setParentId(value === "__none__" ? "" : value);
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a parent unit" />
+              <SelectValue
+                placeholder={
+                  !unitTypeId
+                    ? "Select a unit type first"
+                    : !requiredParentTypeId
+                      ? "This unit type has no parent type"
+                      : "Select a parent unit"
+                }
+              />
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="__none__">No parent unit</SelectItem>
+              <SelectItem value="__none__">
+                {requiredParentTypeId ? "No parent unit" : "No parent unit available"}
+              </SelectItem>
 
-              {parentUnits.map((parentUnit) => (
+              {availableParentUnits.map((parentUnit) => (
                 <SelectItem key={parentUnit.id} value={parentUnit.id}>
                   {parentUnit.nameEn} ({parentUnit.code})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
+          {!unitTypeId ? (
+            <p className="text-muted-foreground text-xs">
+              Select a unit type to determine the allowed parent type.
+            </p>
+          ) : !requiredParentTypeId ? (
+            <p className="text-muted-foreground text-xs">
+              The selected unit type is a root type and does not require a parent unit.
+            </p>
+          ) : availableParentUnits.length === 0 ? (
+            <p className="text-muted-foreground text-xs">
+              No existing units are available for the required parent type.
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-xs">
+              Only units with the configured parent type are shown.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -334,18 +391,7 @@ function CreateOrganizationalUnitForm({
       </div>
 
       <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isPending}
-          onClick={() => {
-            window.dispatchEvent(
-              new KeyboardEvent("keydown", {
-                key: "Escape",
-              })
-            );
-          }}
-        >
+        <Button type="button" variant="outline" disabled={isPending} onClick={onClose}>
           Cancel
         </Button>
 

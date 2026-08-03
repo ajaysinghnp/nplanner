@@ -1,12 +1,11 @@
-import { Building2, Circle, Layers3 } from "lucide-react";
+import { Building2, Layers3 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CreateOrganizationalUnitDialog } from "@/components/organizations/units/create-organizational-unit-dialog";
 import { CreateOrganizationalUnitTypeDialog } from "@/components/organizations/units/create-organizational-unit-type-dialog";
-import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/units/delete-organizational-unit-type-dialog";
-import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/units/edit-organizational-unit-type-dialog";
 import { OrganizationalUnitTree } from "@/components/organizations/units/organizational-unit-tree";
+import { OrganizationalUnitTypeTree } from "@/components/organizations/units/organizational-unit-type-tree";
 import { getOrganizationByCode } from "@/lib/organizations/organization.service";
 import { getOrganizationalUnitTypes } from "@/lib/organizations/units/organizational-unit-type.service";
 import { getOrganizationalUnits } from "@/lib/organizations/units/organizational-unit.service";
@@ -113,79 +112,7 @@ export default async function OrganizationUnitsPage({ params }: OrganizationUnit
             </p>
           </div>
         ) : (
-          <div className="divide-y">
-            {[...unitTypes]
-              .sort((first, second) => {
-                if (first.sortOrder !== second.sortOrder) {
-                  return first.sortOrder - second.sortOrder;
-                }
-
-                return first.nameEn.localeCompare(second.nameEn);
-              })
-              .map((unitType) => (
-                <article
-                  key={unitType.id}
-                  className="hover:bg-muted/30 flex flex-col gap-4 p-5 transition-colors sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                      <Layers3 className="size-5" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{unitType.nameEn}</h3>
-
-                        <span className="bg-muted text-muted-foreground rounded-md px-2 py-0.5 font-mono text-xs">
-                          {unitType.code}
-                        </span>
-                      </div>
-
-                      {unitType.nameNe ? (
-                        <p className="text-muted-foreground mt-1 text-sm">{unitType.nameNe}</p>
-                      ) : null}
-
-                      <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                        <span>
-                          Short name:{" "}
-                          {unitType.shortNameEn ?? unitType.shortNameNe ?? "Not specified"}
-                        </span>
-
-                        <span>Sort order: {unitType.sortOrder}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Circle
-                        className={
-                          unitType.status === "ACTIVE"
-                            ? "size-2.5 fill-green-500 text-green-500"
-                            : unitType.status === "INACTIVE"
-                              ? "size-2.5 fill-amber-500 text-amber-500"
-                              : "size-2.5 fill-red-500 text-red-500"
-                        }
-                        aria-hidden="true"
-                      />
-
-                      <span className="text-muted-foreground text-xs">{unitType.status}</span>
-                    </div>
-
-                    <EditOrganizationalUnitTypeDialog
-                      organizationCode={organization.code}
-                      unitType={unitType}
-                      unitTypes={unitTypes}
-                    />
-
-                    <DeleteOrganizationalUnitTypeDialog
-                      organizationCode={organization.code}
-                      unitType={unitType}
-                    />
-                  </div>
-                </article>
-              ))}
-          </div>
+          <OrganizationalUnitTypeTree organizationCode={organization.code} unitTypes={unitTypes} />
         )}
       </section>
 

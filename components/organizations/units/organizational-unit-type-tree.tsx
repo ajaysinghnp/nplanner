@@ -1,4 +1,4 @@
-import { CornerDownRight, Layers3 } from "lucide-react";
+import { Circle, CornerDownRight, Layers3 } from "lucide-react";
 
 import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/units/delete-organizational-unit-type-dialog";
 import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/units/edit-organizational-unit-type-dialog";
@@ -90,6 +90,16 @@ function OrganizationalUnitTypeTreeNodeItem({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <Circle
+            className={
+              node.status === "ACTIVE"
+                ? "size-2.5 fill-green-500 text-green-500"
+                : node.status === "INACTIVE"
+                  ? "size-2.5 fill-amber-500 text-amber-500"
+                  : "size-2.5 fill-red-500 text-red-500"
+            }
+            aria-hidden="true"
+          />
           <span className="bg-muted text-muted-foreground rounded-md px-2 py-1 text-xs">
             {node.status}
           </span>
