@@ -74,6 +74,14 @@ export function countOrganizationalUnitsByUnitTypeId(unitTypeId: string) {
   });
 }
 
+export async function countChildOrganizationalUnitTypes(parentTypeId: string): Promise<number> {
+  return prisma.organizationalUnitType.count({
+    where: {
+      parentTypeId,
+    },
+  });
+}
+
 export function deleteOrganizationalUnitTypeRecord(id: string) {
   return prisma.organizationalUnitType.delete({
     where: {

@@ -1,4 +1,5 @@
 import {
+  countChildOrganizationalUnitTypes,
   countOrganizationalUnitsByUnitTypeId,
   createOrganizationalUnitTypeRecord,
   deleteOrganizationalUnitTypeRecord,
@@ -6,13 +7,13 @@ import {
   findOrganizationalUnitTypeByOrganizationIdAndCode,
   findOrganizationalUnitTypesByOrganizationId,
   updateOrganizationalUnitTypeRecord,
-} from "./organizational-unit-type.repository";
+} from "@/lib/organizations/units/organizational-unit-type.repository";
 import {
   CreateOrganizationalUnitTypeInput,
   createOrganizationalUnitTypeSchema,
   UpdateOrganizationalUnitTypeInput,
   updateOrganizationalUnitTypeSchema,
-} from "./organizational-unit-type.schemas";
+} from "@/lib/organizations/units/organizational-unit-type.schemas";
 
 export async function getOrganizationalUnitTypes(organizationId: string) {
   return findOrganizationalUnitTypesByOrganizationId(organizationId);
@@ -141,9 +142,27 @@ export async function deleteOrganizationalUnitType(id: string, confirmationCode:
 
   const assignedUnitCount = await countOrganizationalUnitsByUnitTypeId(existingUnitType.id);
 
-  if (assignedUnitCount > 0) {
+  const childUnitTypeCount = await countChildOrganizationalUnitTypes(existingUnitType.id);
+
+  if (assignedUnitCount > 0 || childUnitTypeCount > 0) {
+    const dependencies: string[] = [];
+
+    if (childUnitTypeCount > 0) {
+      dependencies.push(
+        `${childUnitTypeCount} child organizational unit type${childUnitTypeCount === 1 ? "" : "s"}`
+      );
+    }
+
+    if (assignedUnitCount > 0) {
+      dependencies.push(
+        `${assignedUnitCount} organizational unit${assignedUnitCount === 1 ? "" : "s"}`
+      );
+    }
+
     throw new Error(
-      "This organizational unit type cannot be deleted because it is assigned to existing organizational units. Archive it instead."
+      `This organizational unit type cannot be deleted because it has related records: ${dependencies.join(
+        ", "
+      )}. Archive it instead.`
     );
   }
 
