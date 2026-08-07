@@ -3,8 +3,8 @@
 import { Pencil } from "lucide-react";
 import { useActionState, useEffect, useEffectEvent, useState } from "react";
 
-import { initialUpdateOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/units/action-state";
-import { updateOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/units/actions";
+import { initialUpdateOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/unit-types/action-state";
+import { updateOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/unit-types/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

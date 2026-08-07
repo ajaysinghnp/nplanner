@@ -1,7 +1,7 @@
 import { Circle, CornerDownRight, Layers3 } from "lucide-react";
 
-import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/units/delete-organizational-unit-type-dialog";
-import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/units/edit-organizational-unit-type-dialog";
+import { DeleteOrganizationalUnitTypeDialog } from "@/components/organizations/unit-types/delete-organizational-unit-type-dialog";
+import { EditOrganizationalUnitTypeDialog } from "@/components/organizations/unit-types/edit-organizational-unit-type-dialog";
 import {
   buildOrganizationalUnitTypeTree,
   type OrganizationalUnitTypeTreeItem,

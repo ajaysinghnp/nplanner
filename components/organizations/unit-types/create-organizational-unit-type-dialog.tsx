@@ -3,8 +3,8 @@
 import { Plus } from "lucide-react";
 import { useActionState, useEffect, useEffectEvent, useState } from "react";
 
-import { initialCreateOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/units/action-state";
-import { createOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/units/actions";
+import { initialCreateOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/unit-types/action-state";
+import { createOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/unit-types/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

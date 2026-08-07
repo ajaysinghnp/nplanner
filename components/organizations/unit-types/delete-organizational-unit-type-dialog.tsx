@@ -3,8 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { useActionState, useCallback, useEffect, useState } from "react";
 
-import { initialDeleteOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/units/action-state";
-import { deleteOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/units/actions";
+import { initialDeleteOrganizationalUnitTypeActionState } from "@/app/(dashboard)/organizations/[code]/unit-types/action-state";
+import { deleteOrganizationalUnitTypeAction } from "@/app/(dashboard)/organizations/[code]/unit-types/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

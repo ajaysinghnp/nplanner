@@ -4,30 +4,28 @@ import { revalidatePath } from "next/cache";
 
 import { getFieldErrors, getStringValue } from "@/lib/forms";
 import {
-  createOrganizationalUnit,
-  deleteOrganizationalUnit,
-  updateOrganizationalUnit,
-} from "@/lib/organizations/units/organizational-unit.service";
+  createOrganizationalUnitType,
+  deleteOrganizationalUnitType,
+  updateOrganizationalUnitType,
+} from "@/lib/organizations/units/organizational-unit-type.service";
 
 import {
-  CreateOrganizationalUnitActionState,
-  DeleteOrganizationalUnitActionState,
-  UpdateOrganizationalUnitActionState,
+  CreateOrganizationalUnitTypeActionState,
+  DeleteOrganizationalUnitTypeActionState,
+  UpdateOrganizationalUnitTypeActionState,
 } from "./action-state";
 
-// Action functions for organizational unit operations will be implemented in a similar manner, following the same structure and error handling as above.
-export async function createOrganizationalUnitAction(
-  _previousState: CreateOrganizationalUnitActionState,
+export async function createOrganizationalUnitTypeAction(
+  _previousState: CreateOrganizationalUnitTypeActionState,
   formData: FormData
-): Promise<CreateOrganizationalUnitActionState> {
+): Promise<CreateOrganizationalUnitTypeActionState> {
   const organizationId = getStringValue(formData, "organizationId");
   const organizationCode = getStringValue(formData, "organizationCode");
 
   try {
-    await createOrganizationalUnit({
+    await createOrganizationalUnitType({
       organizationId,
-      parentId: getStringValue(formData, "parentId"),
-      unitTypeId: getStringValue(formData, "unitTypeId"),
+      parentTypeId: getStringValue(formData, "parentTypeId"),
       code: getStringValue(formData, "code"),
       nameEn: getStringValue(formData, "nameEn"),
       nameNe: getStringValue(formData, "nameNe"),
@@ -42,7 +40,7 @@ export async function createOrganizationalUnitAction(
 
     return {
       success: true,
-      message: "Organizational unit created successfully.",
+      message: "Organizational unit type created successfully.",
     };
   } catch (error) {
     const fieldErrors = getFieldErrors(error);
@@ -51,9 +49,8 @@ export async function createOrganizationalUnitAction(
       return {
         success: false,
         fieldErrors: {
+          parentTypeId: fieldErrors.parentTypeId,
           code: fieldErrors.code,
-          parentId: fieldErrors.parentId,
-          unitTypeId: fieldErrors.unitTypeId,
           nameEn: fieldErrors.nameEn,
           nameNe: fieldErrors.nameNe,
           shortNameEn: fieldErrors.shortNameEn,
@@ -65,26 +62,26 @@ export async function createOrganizationalUnitAction(
       };
     }
 
-    console.error("Failed to create organizational unit:", error);
+    console.error("Failed to create organizational unit type:", error);
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create organizational unit.",
+      message:
+        error instanceof Error ? error.message : "Failed to create organizational unit type.",
     };
   }
 }
 
-export async function updateOrganizationalUnitAction(
-  _previousState: UpdateOrganizationalUnitActionState,
+export async function updateOrganizationalUnitTypeAction(
+  _previousState: UpdateOrganizationalUnitTypeActionState,
   formData: FormData
-): Promise<UpdateOrganizationalUnitActionState> {
+): Promise<UpdateOrganizationalUnitTypeActionState> {
   const organizationCode = getStringValue(formData, "organizationCode");
 
   try {
-    await updateOrganizationalUnit({
+    await updateOrganizationalUnitType({
       id: getStringValue(formData, "id"),
-      parentId: getStringValue(formData, "parentId"),
-      unitTypeId: getStringValue(formData, "unitTypeId"),
+      parentTypeId: getStringValue(formData, "parentTypeId"),
       nameEn: getStringValue(formData, "nameEn"),
       nameNe: getStringValue(formData, "nameNe"),
       shortNameEn: getStringValue(formData, "shortNameEn"),
@@ -98,7 +95,7 @@ export async function updateOrganizationalUnitAction(
 
     return {
       success: true,
-      message: "Organizational unit updated successfully.",
+      message: "Organizational unit type updated successfully.",
     };
   } catch (error) {
     const fieldErrors = getFieldErrors(error);
@@ -107,8 +104,7 @@ export async function updateOrganizationalUnitAction(
       return {
         success: false,
         fieldErrors: {
-          parentId: fieldErrors.parentId,
-          unitTypeId: fieldErrors.unitTypeId,
+          parentTypeId: fieldErrors.parentTypeId,
           nameEn: fieldErrors.nameEn,
           nameNe: fieldErrors.nameNe,
           shortNameEn: fieldErrors.shortNameEn,
@@ -120,19 +116,20 @@ export async function updateOrganizationalUnitAction(
       };
     }
 
-    console.error("Failed to update organizational unit:", error);
+    console.error("Failed to update organizational unit type:", error);
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to update organizational unit.",
+      message:
+        error instanceof Error ? error.message : "Failed to update organizational unit type.",
     };
   }
 }
 
-export async function deleteOrganizationalUnitAction(
-  _previousState: DeleteOrganizationalUnitActionState,
+export async function deleteOrganizationalUnitTypeAction(
+  _previousState: DeleteOrganizationalUnitTypeActionState,
   formData: FormData
-): Promise<DeleteOrganizationalUnitActionState> {
+): Promise<DeleteOrganizationalUnitTypeActionState> {
   const id = getStringValue(formData, "id");
   const confirmationCode = getStringValue(formData, "confirmationCode");
   const organizationCode = getStringValue(formData, "organizationCode");
@@ -140,26 +137,27 @@ export async function deleteOrganizationalUnitAction(
   if (id === "") {
     return {
       success: false,
-      message: "Organizational unit ID is required.",
+      message: "Organizational unit type ID is required.",
     };
   }
 
   try {
-    await deleteOrganizationalUnit(id, confirmationCode);
+    await deleteOrganizationalUnitType(id, confirmationCode);
 
     revalidatePath(`/organizations/${organizationCode}`);
     revalidatePath(`/organizations/${organizationCode}/units`);
 
     return {
       success: true,
-      message: "Organizational unit deleted successfully.",
+      message: "Organizational unit type deleted successfully.",
     };
   } catch (error) {
-    console.error("Failed to delete organizational unit:", error);
+    console.error("Failed to delete organizational unit type:", error);
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete organizational unit.",
+      message:
+        error instanceof Error ? error.message : "Failed to delete organizational unit type.",
     };
   }
 }
