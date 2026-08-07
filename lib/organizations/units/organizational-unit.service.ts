@@ -1,6 +1,9 @@
+import type { OrganizationalUnit, OrganizationalUnitType } from "@/generated/prisma/client";
+
 import { findOrganizationById } from "../organization.repository";
 import { findOrganizationalUnitTypeById } from "./organizational-unit-type.repository";
 import {
+  countChildOrganizationalUnits,
   createOrganizationalUnitRecord,
   deleteOrganizationalUnitRecord,
   findOrganizationalUnitByCode,
@@ -35,7 +38,12 @@ export async function validateCreateOrganizationalUnit(input: CreateOrganization
   }
 
   const existingUnit = await findOrganizationalUnitByCode(data.organizationId, data.code);
-  return { data, organization, existingUnit };
+
+  return {
+    data,
+    organization,
+    existingUnit,
+  };
 }
 
 export async function createOrganizationalUnit(input: CreateOrganizationalUnitInput) {
@@ -60,6 +68,12 @@ export async function ensureOrganizationalUnit(input: CreateOrganizationalUnitIn
   if (existingUnit) {
     return existingUnit;
   }
+
+  const unitType = await validateUnitType(data.organizationId, data.unitTypeId);
+
+  const parentUnit = await validateParentUnit(data.organizationId, data.parentId);
+
+  validateUnitTypeParentRelationship(unitType, parentUnit);
 
   return createOrganizationalUnitRecord(data);
 }
@@ -101,20 +115,23 @@ export async function deleteOrganizationalUnit(id: string, confirmationCode: str
     throw new Error("The confirmation code does not match the organizational unit code.");
   }
 
-  const units = await getOrganizationalUnits(existingUnit.organizationId);
+  const childUnitCount = await countChildOrganizationalUnits(existingUnit.id);
 
-  const hasChildren = units.some((unit) => unit.parentId === existingUnit.id);
-
-  if (hasChildren) {
+  if (childUnitCount > 0) {
     throw new Error(
-      "This organizational unit cannot be deleted because it has child organizational units."
+      `This organizational unit cannot be deleted because it has ${childUnitCount} child organizational unit${
+        childUnitCount === 1 ? "" : "s"
+      }. Archive it instead.`
     );
   }
 
   return deleteOrganizationalUnitRecord(existingUnit.id);
 }
 
-async function validateUnitType(organizationId: string, unitTypeId: string) {
+async function validateUnitType(
+  organizationId: string,
+  unitTypeId: string
+): Promise<OrganizationalUnitType | null> {
   if (unitTypeId === "") {
     return null;
   }
@@ -136,7 +153,7 @@ async function validateParentUnit(
   organizationId: string,
   parentId: string,
   currentUnitId?: string
-) {
+): Promise<OrganizationalUnit | null> {
   if (parentId === "") {
     return null;
   }
@@ -159,8 +176,8 @@ async function validateParentUnit(
 }
 
 function validateUnitTypeParentRelationship(
-  unitType: Awaited<ReturnType<typeof findOrganizationalUnitTypeById>> | null,
-  parentUnit: Awaited<ReturnType<typeof findOrganizationalUnitById>> | null
+  unitType: OrganizationalUnitType | null,
+  parentUnit: OrganizationalUnit | null
 ) {
   if (!unitType) {
     return;

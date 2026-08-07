@@ -2,10 +2,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   findOrganizationById: vi.fn(),
+
   findOrganizationalUnitTypeById: vi.fn(),
+
   findOrganizationalUnitByCode: vi.fn(),
   findOrganizationalUnitById: vi.fn(),
   getOrganizationalUnits: vi.fn(),
+
+  countChildOrganizationalUnits: vi.fn(),
+
   createOrganizationalUnitRecord: vi.fn(),
   deleteOrganizationalUnitRecord: vi.fn(),
   updateOrganizationalUnitRecord: vi.fn(),
@@ -21,10 +26,17 @@ vi.mock("@/lib/organizations/units/organizational-unit-type.repository", () => (
 
 vi.mock("@/lib/organizations/units/organizational-unit.repository", () => ({
   findOrganizationalUnitByCode: mocks.findOrganizationalUnitByCode,
+
   findOrganizationalUnitById: mocks.findOrganizationalUnitById,
+
   getOrganizationalUnits: mocks.getOrganizationalUnits,
+
+  countChildOrganizationalUnits: mocks.countChildOrganizationalUnits,
+
   createOrganizationalUnitRecord: mocks.createOrganizationalUnitRecord,
+
   deleteOrganizationalUnitRecord: mocks.deleteOrganizationalUnitRecord,
+
   updateOrganizationalUnitRecord: mocks.updateOrganizationalUnitRecord,
 }));
 
@@ -57,7 +69,7 @@ const baseCreateInput = {
   shortNameEn: "Finance",
   shortNameNe: "",
   sortOrder: 0,
-  status: "ACTIVE",
+  status: "ACTIVE" as const,
 };
 
 const baseUpdateInput = {
@@ -69,7 +81,7 @@ const baseUpdateInput = {
   shortNameEn: "Finance",
   shortNameNe: "",
   sortOrder: 1,
-  status: "ACTIVE",
+  status: "ACTIVE" as const,
 };
 
 function makeOrganization(overrides: Record<string, unknown> = {}) {
@@ -88,6 +100,7 @@ function makeUnitType(overrides: Record<string, unknown> = {}) {
     parentTypeId: null,
     code: "DEPARTMENT",
     nameEn: "Department",
+    nameNe: null,
     ...overrides,
   };
 }
@@ -104,9 +117,18 @@ function makeOrganizationalUnit(overrides: Record<string, unknown> = {}) {
     shortNameEn: "Finance",
     shortNameNe: null,
     sortOrder: 0,
-    status: "ACTIVE",
+    status: "ACTIVE" as const,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+
+    parent: null,
+    unitType: null,
+
+    _count: {
+      children: 0,
+      memberships: 0,
+    },
+
     ...overrides,
   };
 }
@@ -125,6 +147,8 @@ describe("organizational-unit.service", () => {
 
     mocks.getOrganizationalUnits.mockResolvedValue([]);
 
+    mocks.countChildOrganizationalUnits.mockResolvedValue(0);
+
     mocks.createOrganizationalUnitRecord.mockImplementation(async (data) => ({
       id: "created-unit",
       ...data,
@@ -136,7 +160,9 @@ describe("organizational-unit.service", () => {
     }));
 
     mocks.deleteOrganizationalUnitRecord.mockImplementation(async (id) =>
-      makeOrganizationalUnit({ id })
+      makeOrganizationalUnit({
+        id,
+      })
     );
   });
 
@@ -158,7 +184,9 @@ describe("organizational-unit.service", () => {
       const result = await getOrganizationalUnits(organizationId);
 
       expect(mocks.getOrganizationalUnits).toHaveBeenCalledOnce();
+
       expect(mocks.getOrganizationalUnits).toHaveBeenCalledWith(organizationId);
+
       expect(result).toBe(units);
     });
   });
@@ -172,7 +200,9 @@ describe("organizational-unit.service", () => {
       const result = await getOrganizationalUnitById(departmentUnitId);
 
       expect(mocks.findOrganizationalUnitById).toHaveBeenCalledOnce();
+
       expect(mocks.findOrganizationalUnitById).toHaveBeenCalledWith(departmentUnitId);
+
       expect(result).toBe(unit);
     });
   });
@@ -206,6 +236,7 @@ describe("organizational-unit.service", () => {
       mocks.findOrganizationalUnitTypeById.mockResolvedValue(
         makeUnitType({
           id: departmentTypeId,
+          parentTypeId: null,
         })
       );
 
@@ -238,6 +269,7 @@ describe("organizational-unit.service", () => {
       mocks.findOrganizationalUnitById.mockResolvedValue(
         makeOrganizationalUnit({
           id: departmentUnitId,
+          organizationId,
           unitTypeId: departmentTypeId,
           parentId: null,
         })
@@ -245,7 +277,7 @@ describe("organizational-unit.service", () => {
 
       await createOrganizationalUnit({
         ...baseCreateInput,
-        code: "FINANCE-ADMIN",
+        code: "FINANCE_ADMIN",
         nameEn: "Finance Administration Section",
         unitTypeId: sectionTypeId,
         parentId: departmentUnitId,
@@ -257,7 +289,8 @@ describe("organizational-unit.service", () => {
 
       expect(mocks.createOrganizationalUnitRecord).toHaveBeenCalledWith(
         expect.objectContaining({
-          code: "FINANCE-ADMIN",
+          organizationId,
+          code: "FINANCE_ADMIN",
           unitTypeId: sectionTypeId,
           parentId: departmentUnitId,
         })
@@ -320,6 +353,81 @@ describe("organizational-unit.service", () => {
       expect(mocks.createOrganizationalUnitRecord).not.toHaveBeenCalled();
     });
 
+    it("rejects a root unit type when a parent organizational unit is supplied", async () => {
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(
+        makeUnitType({
+          id: departmentTypeId,
+          parentTypeId: null,
+        })
+      );
+
+      mocks.findOrganizationalUnitById.mockResolvedValue(
+        makeOrganizationalUnit({
+          id: departmentUnitId,
+          unitTypeId: departmentTypeId,
+        })
+      );
+
+      await expect(
+        createOrganizationalUnit({
+          ...baseCreateInput,
+          unitTypeId: departmentTypeId,
+          parentId: departmentUnitId,
+        })
+      ).rejects.toThrow(/is a root unit type and cannot have a parent organizational unit/);
+
+      expect(mocks.createOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
+    it("rejects a child unit type when no parent organizational unit is supplied", async () => {
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(
+        makeUnitType({
+          id: sectionTypeId,
+          parentTypeId: departmentTypeId,
+          code: "SECTION",
+          nameEn: "Section",
+        })
+      );
+
+      await expect(
+        createOrganizationalUnit({
+          ...baseCreateInput,
+          unitTypeId: sectionTypeId,
+          parentId: "",
+        })
+      ).rejects.toThrow(/must have a parent organizational unit/);
+
+      expect(mocks.createOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
+    it("rejects a child unit type when the parent has the wrong unit type", async () => {
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(
+        makeUnitType({
+          id: sectionTypeId,
+          parentTypeId: departmentTypeId,
+          code: "SECTION",
+          nameEn: "Section",
+        })
+      );
+
+      mocks.findOrganizationalUnitById.mockResolvedValue(
+        makeOrganizationalUnit({
+          id: teamUnitId,
+          unitTypeId: teamTypeId,
+        })
+      );
+
+      await expect(
+        createOrganizationalUnit({
+          ...baseCreateInput,
+          unitTypeId: sectionTypeId,
+          parentId: teamUnitId,
+        })
+      ).rejects.toThrow(/must have the parent type configured/);
+
+      expect(mocks.createOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
     it("rejects a parent unit that does not exist", async () => {
       await expect(
         createOrganizationalUnit({
@@ -370,8 +478,6 @@ describe("organizational-unit.service", () => {
 
       const result = await updateOrganizationalUnit(baseUpdateInput);
 
-      expect(mocks.findOrganizationalUnitById).toHaveBeenCalledOnce();
-
       expect(mocks.findOrganizationalUnitById).toHaveBeenCalledWith(departmentUnitId);
 
       expect(mocks.findOrganizationalUnitTypeById).not.toHaveBeenCalled();
@@ -387,13 +493,13 @@ describe("organizational-unit.service", () => {
         unitTypeId: departmentTypeId,
       });
 
-      const unitType = makeUnitType({
-        id: departmentTypeId,
-      });
-
       mocks.findOrganizationalUnitById.mockResolvedValue(existingUnit);
 
-      mocks.findOrganizationalUnitTypeById.mockResolvedValue(unitType);
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(
+        makeUnitType({
+          id: departmentTypeId,
+        })
+      );
 
       await updateOrganizationalUnit({
         ...baseUpdateInput,
@@ -413,13 +519,13 @@ describe("organizational-unit.service", () => {
     it("updates an existing unit with a valid parent in the same organization", async () => {
       const existingUnit = makeOrganizationalUnit({
         id: sectionUnitId,
-        unitTypeId: sectionTypeId,
+        unitTypeId: null,
         parentId: null,
       });
 
       const proposedParent = makeOrganizationalUnit({
         id: departmentUnitId,
-        unitTypeId: departmentTypeId,
+        unitTypeId: null,
         parentId: null,
       });
 
@@ -449,6 +555,55 @@ describe("organizational-unit.service", () => {
       expect(mocks.updateOrganizationalUnitRecord).toHaveBeenCalledWith(
         expect.objectContaining({
           id: sectionUnitId,
+          parentId: departmentUnitId,
+        })
+      );
+    });
+
+    it("updates a child unit with a valid parent-type relationship", async () => {
+      const existingUnit = makeOrganizationalUnit({
+        id: sectionUnitId,
+        unitTypeId: sectionTypeId,
+        parentId: null,
+      });
+
+      const sectionType = makeUnitType({
+        id: sectionTypeId,
+        parentTypeId: departmentTypeId,
+        code: "SECTION",
+        nameEn: "Section",
+      });
+
+      const departmentUnit = makeOrganizationalUnit({
+        id: departmentUnitId,
+        unitTypeId: departmentTypeId,
+      });
+
+      mocks.findOrganizationalUnitById.mockImplementation(async (id: string) => {
+        if (id === sectionUnitId) {
+          return existingUnit;
+        }
+
+        if (id === departmentUnitId) {
+          return departmentUnit;
+        }
+
+        return null;
+      });
+
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(sectionType);
+
+      await updateOrganizationalUnit({
+        ...baseUpdateInput,
+        id: sectionUnitId,
+        unitTypeId: sectionTypeId,
+        parentId: departmentUnitId,
+      });
+
+      expect(mocks.updateOrganizationalUnitRecord).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: sectionUnitId,
+          unitTypeId: sectionTypeId,
           parentId: departmentUnitId,
         })
       );
@@ -503,6 +658,124 @@ describe("organizational-unit.service", () => {
           unitTypeId: departmentTypeId,
         })
       ).rejects.toThrow("The selected organizational unit type belongs to another organization.");
+
+      expect(mocks.updateOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
+    it("rejects a root unit type when assigning a parent during update", async () => {
+      const existingUnit = makeOrganizationalUnit({
+        id: sectionUnitId,
+        unitTypeId: departmentTypeId,
+        parentId: null,
+      });
+
+      const rootType = makeUnitType({
+        id: departmentTypeId,
+        parentTypeId: null,
+      });
+
+      const parentUnit = makeOrganizationalUnit({
+        id: teamUnitId,
+        unitTypeId: departmentTypeId,
+      });
+
+      mocks.findOrganizationalUnitById.mockImplementation(async (id: string) => {
+        if (id === sectionUnitId) {
+          return existingUnit;
+        }
+
+        if (id === teamUnitId) {
+          return parentUnit;
+        }
+
+        return null;
+      });
+
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(rootType);
+
+      await expect(
+        updateOrganizationalUnit({
+          ...baseUpdateInput,
+          id: sectionUnitId,
+          unitTypeId: departmentTypeId,
+          parentId: teamUnitId,
+        })
+      ).rejects.toThrow(/is a root unit type and cannot have a parent/);
+
+      expect(mocks.updateOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
+    it("rejects a child unit type without a parent during update", async () => {
+      const existingUnit = makeOrganizationalUnit({
+        id: sectionUnitId,
+        unitTypeId: sectionTypeId,
+        parentId: departmentUnitId,
+      });
+
+      const childType = makeUnitType({
+        id: sectionTypeId,
+        parentTypeId: departmentTypeId,
+        code: "SECTION",
+        nameEn: "Section",
+      });
+
+      mocks.findOrganizationalUnitById.mockResolvedValue(existingUnit);
+
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(childType);
+
+      await expect(
+        updateOrganizationalUnit({
+          ...baseUpdateInput,
+          id: sectionUnitId,
+          unitTypeId: sectionTypeId,
+          parentId: "",
+        })
+      ).rejects.toThrow(/must have a parent organizational unit/);
+
+      expect(mocks.updateOrganizationalUnitRecord).not.toHaveBeenCalled();
+    });
+
+    it("rejects a child unit type when the selected parent has the wrong type during update", async () => {
+      const existingUnit = makeOrganizationalUnit({
+        id: sectionUnitId,
+        unitTypeId: sectionTypeId,
+        parentId: null,
+      });
+
+      const childType = makeUnitType({
+        id: sectionTypeId,
+        parentTypeId: departmentTypeId,
+        code: "SECTION",
+        nameEn: "Section",
+      });
+
+      const wrongParent = makeOrganizationalUnit({
+        id: teamUnitId,
+        unitTypeId: teamTypeId,
+      });
+
+      mocks.findOrganizationalUnitById.mockImplementation(async (id: string) => {
+        if (id === sectionUnitId) {
+          return existingUnit;
+        }
+
+        if (id === teamUnitId) {
+          return wrongParent;
+        }
+
+        return null;
+      });
+
+      mocks.findOrganizationalUnitTypeById.mockResolvedValue(childType);
+
+      await expect(
+        updateOrganizationalUnit({
+          ...baseUpdateInput,
+          id: sectionUnitId,
+          unitTypeId: sectionTypeId,
+          parentId: teamUnitId,
+        })
+      ).rejects.toThrow(/must have the parent type configured/);
 
       expect(mocks.updateOrganizationalUnitRecord).not.toHaveBeenCalled();
     });
@@ -705,7 +978,7 @@ describe("organizational-unit.service", () => {
         "Organizational unit was not found."
       );
 
-      expect(mocks.getOrganizationalUnits).not.toHaveBeenCalled();
+      expect(mocks.countChildOrganizationalUnits).not.toHaveBeenCalled();
 
       expect(mocks.deleteOrganizationalUnitRecord).not.toHaveBeenCalled();
     });
@@ -722,7 +995,7 @@ describe("organizational-unit.service", () => {
         "The confirmation code does not match the organizational unit code."
       );
 
-      expect(mocks.getOrganizationalUnits).not.toHaveBeenCalled();
+      expect(mocks.countChildOrganizationalUnits).not.toHaveBeenCalled();
 
       expect(mocks.deleteOrganizationalUnitRecord).not.toHaveBeenCalled();
     });
@@ -733,19 +1006,17 @@ describe("organizational-unit.service", () => {
         code: "FINANCE",
       });
 
-      const childUnit = makeOrganizationalUnit({
-        id: sectionUnitId,
-        code: "FINANCE-ADMIN",
-        parentId: departmentUnitId,
-      });
-
       mocks.findOrganizationalUnitById.mockResolvedValue(unit);
 
-      mocks.getOrganizationalUnits.mockResolvedValue([unit, childUnit]);
+      mocks.countChildOrganizationalUnits.mockResolvedValue(2);
 
       await expect(deleteOrganizationalUnit(departmentUnitId, "FINANCE")).rejects.toThrow(
-        "This organizational unit cannot be deleted because it has child organizational units."
+        "This organizational unit cannot be deleted because it has 2 child organizational units. Archive it instead."
       );
+
+      expect(mocks.countChildOrganizationalUnits).toHaveBeenCalledOnce();
+
+      expect(mocks.countChildOrganizationalUnits).toHaveBeenCalledWith(departmentUnitId);
 
       expect(mocks.deleteOrganizationalUnitRecord).not.toHaveBeenCalled();
     });
@@ -756,23 +1027,40 @@ describe("organizational-unit.service", () => {
         code: "FINANCE",
       });
 
-      const unrelatedUnit = makeOrganizationalUnit({
-        id: sectionUnitId,
-        code: "HR",
-        parentId: null,
-      });
-
       mocks.findOrganizationalUnitById.mockResolvedValue(unit);
 
-      mocks.getOrganizationalUnits.mockResolvedValue([unit, unrelatedUnit]);
+      mocks.countChildOrganizationalUnits.mockResolvedValue(0);
 
       mocks.deleteOrganizationalUnitRecord.mockResolvedValue(unit);
 
       const result = await deleteOrganizationalUnit(departmentUnitId, "FINANCE");
 
-      expect(mocks.getOrganizationalUnits).toHaveBeenCalledWith(organizationId);
+      expect(mocks.countChildOrganizationalUnits).toHaveBeenCalledOnce();
+
+      expect(mocks.countChildOrganizationalUnits).toHaveBeenCalledWith(departmentUnitId);
 
       expect(mocks.deleteOrganizationalUnitRecord).toHaveBeenCalledOnce();
+
+      expect(mocks.deleteOrganizationalUnitRecord).toHaveBeenCalledWith(departmentUnitId);
+
+      expect(result).toBe(unit);
+    });
+
+    it("deletes the organizational unit when the child count is zero even if unrelated units exist", async () => {
+      const unit = makeOrganizationalUnit({
+        id: departmentUnitId,
+        code: "FINANCE",
+      });
+
+      mocks.findOrganizationalUnitById.mockResolvedValue(unit);
+
+      mocks.countChildOrganizationalUnits.mockResolvedValue(0);
+
+      mocks.deleteOrganizationalUnitRecord.mockResolvedValue(unit);
+
+      const result = await deleteOrganizationalUnit(departmentUnitId, "FINANCE");
+
+      expect(mocks.countChildOrganizationalUnits).toHaveBeenCalledWith(departmentUnitId);
 
       expect(mocks.deleteOrganizationalUnitRecord).toHaveBeenCalledWith(departmentUnitId);
 

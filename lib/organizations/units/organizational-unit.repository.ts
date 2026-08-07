@@ -111,6 +111,14 @@ export function updateOrganizationalUnitRecord(data: UpdateOrganizationalUnitDat
   });
 }
 
+export async function countChildOrganizationalUnits(parentId: string): Promise<number> {
+  return prisma.organizationalUnit.count({
+    where: {
+      parentId,
+    },
+  });
+}
+
 export function deleteOrganizationalUnitRecord(id: string) {
   return prisma.organizationalUnit.delete({
     where: {
