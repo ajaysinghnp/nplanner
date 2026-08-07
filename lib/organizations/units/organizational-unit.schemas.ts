@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { organizationalCodeRegex } from "@/conf/formats";
 import { RecordStatus } from "@/generated/prisma/client";
 
 const optionalText = (min: number, max: number, fieldName: string) =>
@@ -50,10 +51,7 @@ export const createOrganizationalUnitSchema = z.object({
     .trim()
     .min(2, "Organizational unit code must be at least 2 characters.")
     .max(50, "Organizational unit code must not exceed 50 characters.")
-    .regex(
-      /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/,
-      "Organizational unit code must contain uppercase letters, numbers, and hyphens only."
-    ),
+    .regex(organizationalCodeRegex.pattern, organizationalCodeRegex.message),
 
   nameEn: requiredText(2, 200, "English organizational unit name"),
 

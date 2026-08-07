@@ -21,7 +21,11 @@ export async function getOrganizationalUnitById(id: string) {
   return findOrganizationalUnitById(id);
 }
 
-export async function createOrganizationalUnit(input: CreateOrganizationalUnitInput) {
+export async function getOrganizationalUnitByCode(organizationId: string, code: string) {
+  return findOrganizationalUnitByCode(organizationId, code);
+}
+
+export async function validateCreateOrganizationalUnit(input: CreateOrganizationalUnitInput) {
   const data = createOrganizationalUnitSchema.parse(input);
 
   const organization = await findOrganizationById(data.organizationId);
@@ -31,6 +35,11 @@ export async function createOrganizationalUnit(input: CreateOrganizationalUnitIn
   }
 
   const existingUnit = await findOrganizationalUnitByCode(data.organizationId, data.code);
+  return { data, organization, existingUnit };
+}
+
+export async function createOrganizationalUnit(input: CreateOrganizationalUnitInput) {
+  const { data, existingUnit } = await validateCreateOrganizationalUnit(input);
 
   if (existingUnit) {
     throw new Error(`An organizational unit with code "${data.code}" already exists.`);
@@ -41,6 +50,16 @@ export async function createOrganizationalUnit(input: CreateOrganizationalUnitIn
   const parentUnit = await validateParentUnit(data.organizationId, data.parentId);
 
   validateUnitTypeParentRelationship(unitType, parentUnit);
+
+  return createOrganizationalUnitRecord(data);
+}
+
+export async function ensureOrganizationalUnit(input: CreateOrganizationalUnitInput) {
+  const { data, existingUnit } = await validateCreateOrganizationalUnit(input);
+
+  if (existingUnit) {
+    return existingUnit;
+  }
 
   return createOrganizationalUnitRecord(data);
 }

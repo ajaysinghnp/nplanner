@@ -2,10 +2,11 @@ import "dotenv/config";
 
 import { prisma } from "@/lib/db/prisma";
 
-import { seedOrganizations } from "./seeds/organizations";
+import { seedOrganizations, seedOrganizationStructures } from "./seeds/organizations";
 
 async function main() {
   await seedOrganizations();
+  await seedOrganizationStructures();
 }
 
 main()

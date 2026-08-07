@@ -41,8 +41,8 @@ export const createOrganizationalUnitTypeSchema = z.object({
     .min(2, "Unit type code must be at least 2 characters.")
     .max(50, "Unit type code must not exceed 50 characters.")
     .regex(
-      /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/,
-      "Unit type code must contain uppercase letters, numbers, and hyphens only."
+      /^[A-Z0-9]+(?:_[A-Z0-9]+)*$/,
+      "Unit type code must contain uppercase letters, numbers, and underscores only."
     ),
 
   nameEn: requiredText(2, 200, "English unit type name"),

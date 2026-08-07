@@ -2,15 +2,15 @@ export const ORGANIZATIONS = [
   {
     code: "BRSOLUTIONS",
     nameEn: "BR Solutions",
-    nameNe: "",
+    nameNe: "बीआर सोलुसन्स",
     shortNameEn: "BR Solutions",
-    shortNameNe: "",
+    shortNameNe: "बीआर सोलुसन्स",
   },
   {
-    code: "NPLANNER",
-    nameEn: "NPlanner",
-    nameNe: "",
-    shortNameEn: "NPlanner",
-    shortNameNe: "",
+    code: "NRB",
+    nameEn: "Nepal Rastra Bank",
+    nameNe: "नेपाल राष्ट्र बैंक",
+    shortNameEn: "NRB",
+    shortNameNe: "एनआरबी",
   },
 ];

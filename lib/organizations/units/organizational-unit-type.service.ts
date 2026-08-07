@@ -22,6 +22,13 @@ export async function getOrganizationalUnitTypeById(id: string) {
   return findOrganizationalUnitTypeById(id);
 }
 
+export async function getOrganizationalUnitTypeByOrganizationIdAndCode(
+  organizationId: string,
+  code: string
+) {
+  return findOrganizationalUnitTypeByOrganizationIdAndCode(organizationId, code);
+}
+
 async function validateParentType(
   organizationId: string,
   parentTypeId: string | undefined,
